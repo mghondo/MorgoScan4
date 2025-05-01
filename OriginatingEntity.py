@@ -4,10 +4,19 @@ import pytesseract
 from pytesseract import Output
 import os
 
+
 def process_pdf(pdf_path):
-    # Check if the PDF file exists
+    """
+    Extract the company name to the right of 'Originating Entity' using OCR.
+    Args:
+        pdf_path (str): Path to the PDF file.
+    Returns:
+        tuple: (filename, result) where result is the company name or an error message.
+    """
+    filename = os.path.basename(pdf_path)
+
     if not os.path.exists(pdf_path):
-        return f"PDF file not found: {pdf_path}"
+        return (filename, f"PDF file not found: {pdf_path}")
 
     # Convert first PDF page to high-res image
     doc = fitz.open(pdf_path)
@@ -39,7 +48,7 @@ def process_pdf(pdf_path):
             break
 
     if originating_idx == -1 or entity_idx == -1:
-        return "Could not locate 'Originating Entity'"
+        return (filename, "Could not locate 'Originating Entity'")
 
     # Calculate combined bounding box
     orig_left = ocr_data["left"][originating_idx]
@@ -64,12 +73,6 @@ def process_pdf(pdf_path):
             .replace('[', '') \
             .replace(']', '') \
             .strip()
-        return cleaned if cleaned else "No company name found"
+        return (filename, cleaned if cleaned else "No company name found")
 
-    return "No company name found"
-
-# Main execution
-pdf_file = "Appalachian Pharm Processing, LLC.pdf"
-
-result = process_pdf(pdf_file)
-print(f"Company: {result}")
+    return (filename, "No company name found")
